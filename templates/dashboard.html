@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Music Library Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+    <header class="topbar">
+        <div>
+            <h1>Music Library Dashboard</h1>
+            <p>Authenticated CRUD application using Flask API</p>
+        </div>
+
+        <div class="top-actions">
+            <a href="/home" class="home-link">Home</a>
+            <button id="logoutBtn" class="logout-btn">Logout</button>
+        </div>
+    </header>
+
+    <main class="main-container">
+
+        <section class="card">
+            <h2 id="formTitle">Add New Track</h2>
+
+            <form id="trackForm">
+                <input type="hidden" id="trackId">
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Song Title</label>
+                        <input type="text" id="title" placeholder="Example: Shape of You">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Artist</label>
+                        <input type="text" id="artist" placeholder="Example: Ed Sheeran">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Album</label>
+                        <input type="text" id="album" placeholder="Example: Divide">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Genre / Category</label>
+                        <input type="text" id="genre" placeholder="Example: Pop">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Release Year</label>
+                        <input type="number" id="year" placeholder="Example: 2024">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Hit Song?</label>
+                        <select id="isHit">
+                            <option value="false">No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="button-row">
+                    <button type="submit" class="primary-btn" id="submitBtn">Create Track</button>
+                    <button type="button" class="secondary-btn" id="cancelEditBtn">Cancel Edit</button>
+                </div>
+
+                <p id="formMessage" class="message"></p>
+            </form>
+        </section>
+
+        <section class="card">
+            <div class="section-header">
+                <div>
+                    <h2>Saved Music Tracks</h2>
+                    <p>Create, read, update and delete tracks through API calls.</p>
+                </div>
+
+                <input type="text" id="searchInput" class="search-box" placeholder="Search tracks...">
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Artist</th>
+                            <th>Album</th>
+                            <th>Genre</th>
+                            <th>Year</th>
+                            <th>Hit</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tracksTableBody"></tbody>
+                </table>
+            </div>
+
+            <p id="emptyMessage" class="empty-message"></p>
+        </section>
+
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

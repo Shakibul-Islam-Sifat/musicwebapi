@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Music Library Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+    <header class="home-hero">
+        <nav class="home-nav">
+            <h2>Music Library</h2>
+
+            <div class="nav-links">
+                <a href="/home">Home</a>
+                <a href="/app">Dashboard</a>
+                <button id="logoutBtn" class="nav-logout">Logout</button>
+            </div>
+        </nav>
+
+        <div class="hero-content">
+            <h1>Manage Your Music Collection Beautifully</h1>
+            <p>
+                A Flask API-based web application Made by Shakibul Islam Sifat,
+                You feel the music here, hit songs, year-wise features.
+            </p>
+            
+        </div>
+    </header>
+
+    <main class="home-container">
+
+        <section class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Tracks</h3>
+                <p id="totalTracks">0</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Hit Songs</h3>
+                <p id="hitTracks">0</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Categories</h3>
+                <p id="totalGenres">0</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Latest Year</h3>
+                <p id="latestYear">N/A</p>
+            </div>
+        </section>
+
+        <section class="home-section">
+            <div class="section-title">
+                <h2>Music Categories</h2>
+                <p>Tracks are grouped by genre or category.</p>
+            </div>
+
+            <div id="categoryCards" class="category-grid"></div>
+        </section>
+
+        <section class="home-section two-column">
+            <div class="info-panel">
+                <h2>Hit Songs</h2>
+                <p class="panel-subtitle">Popular tracks marked as hit.</p>
+                <div id="hitSongList" class="song-list"></div>
+            </div>
+
+            <div class="info-panel">
+                <h2>Year-wise Display</h2>
+                <p class="panel-subtitle">Number of songs stored by release year.</p>
+                <div id="yearList" class="year-list"></div>
+            </div>
+        </section>
+
+        <section class="home-section">
+            <div class="section-title">
+                <h2>Recently Added Tracks</h2>
+                <p>Latest records added through the dashboard.</p>
+            </div>
+
+            <div id="recentTracks" class="recent-grid"></div>
+        </section>
+
+    </main>
+
+    <script>
+        const token = localStorage.getItem("music_token");
+
+        if (!token) {
+            window.location.href = "/";
+        }
+
+        document.getElementById("logoutBtn").addEventListener("click", function() {
+            localStorage.removeItem("music_token");
+            localStorage.removeItem("music_user");
+            window.location.href = "/";
+        });
+
+        function getHeaders() {
+            return {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            };
+        }
+
+        async function loadHomeData() {
+            const response = await fetch("/tracks/summary", {
+                method: "GET",
+                headers: getHeaders()
+            });
+
+            console.log("GET Home Summary API Status Code:", response.status);
+
+            if (response.status === 401) {
+                localStorage.removeItem("music_token");
+                window.location.href = "/";
+                return;
+            }
+
+            const data = await response.json();
+
+            document.getElementById("totalTracks").textContent = data.total_tracks;
+            document.getElementById("hitTracks").textContent = data.hit_tracks;
+            document.getElementById("totalGenres").textContent = data.total_genres;
+            document.getElementById("latestYear").textContent = data.latest_year;
+
+            renderCategories(data.genre_summary);
+            renderYears(data.year_summary);
+            renderHitSongs(data.top_hit_tracks);
+            renderRecentTracks(data.recent_tracks);
+        }
+
+        function renderCategories(categories) {
+            const categoryCards = document.getElementById("categoryCards");
+            categoryCards.innerHTML = "";
+
+            const categoryNames = Object.keys(categories);
+
+            if (categoryNames.length === 0) {
+                categoryCards.innerHTML = "<p class='empty-message'>No categories found. Add songs from dashboard.</p>";
+                return;
+            }
+
+            categoryNames.forEach(category => {
+                const card = document.createElement("div");
+                card.className = "category-card";
+                card.innerHTML = `
+                    <div class="category-icon">🎵</div>
+                    <h3>${escapeHtml(category)}</h3>
+                    <p>${categories[category]} track(s)</p>
+                `;
+                categoryCards.appendChild(card);
+            });
+        }
+
+        function renderYears(years) {
+            const yearList = document.getElementById("yearList");
+            yearList.innerHTML = "";
+
+            const yearNames = Object.keys(years).sort((a, b) => b - a);
+
+            if (yearNames.length === 0) {
+                yearList.innerHTML = "<p class='empty-message'>No year data available.</p>";
+                return;
+            }
+
+            yearNames.forEach(year => {
+                const item = document.createElement("div");
+                item.className = "year-item";
+                item.innerHTML = `
+                    <span>${year}</span>
+                    <strong>${years[year]} song(s)</strong>
+                `;
+                yearList.appendChild(item);
+            });
+        }
+
+        function renderHitSongs(songs) {
+            const hitSongList = document.getElementById("hitSongList");
+            hitSongList.innerHTML = "";
+
+            if (!songs || songs.length === 0) {
+                hitSongList.innerHTML = "<p class='empty-message'>No hit songs marked yet.</p>";
+                return;
+            }
+
+            songs.forEach(song => {
+                const item = document.createElement("div");
+                item.className = "song-item";
+                item.innerHTML = `
+                    <h4>🔥 ${escapeHtml(song.title)}</h4>
+                    <p>${escapeHtml(song.artist)} • ${escapeHtml(song.genre)} • ${song.year}</p>
+                `;
+                hitSongList.appendChild(item);
+            });
+        }
+
+        function renderRecentTracks(tracks) {
+            const recentTracks = document.getElementById("recentTracks");
+            recentTracks.innerHTML = "";
+
+            if (!tracks || tracks.length === 0) {
+                recentTracks.innerHTML = "<p class='empty-message'>No recent tracks found.</p>";
+                return;
+            }
+
+            tracks.forEach(track => {
+                const card = document.createElement("div");
+                card.className = "recent-card";
+                card.innerHTML = `
+                    <h3>${track.is_hit ? "🔥" : "🎧"} ${escapeHtml(track.title)}</h3>
+                    <p><strong>Artist:</strong> ${escapeHtml(track.artist)}</p>
+                    <p><strong>Album:</strong> ${escapeHtml(track.album)}</p>
+                    <p><strong>Genre:</strong> ${escapeHtml(track.genre)}</p>
+                    <p><strong>Year:</strong> ${track.year}</p>
+                `;
+                recentTracks.appendChild(card);
+            });
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        loadHomeData();
+    </script>
+</body>
+</html>
